@@ -1,0 +1,19 @@
+{
+  "name": "delivery-api",
+  "version": "1.0.0",
+  "description": "API for a delivery system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntbandara3/delivery-api.git"
+  },
+  "author": "Nandun Bandara",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ntbandara3/delivery-api/issues"
+  },
+  "homepage": "https://github.com/ntbandara3/delivery-api#readme"
+}
