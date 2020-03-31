@@ -1,54 +1,48 @@
 (() => {
+  'use strict';
 
-    'use strict';
+  const cors = require('cors');
+  const bodyParser = require('body-parser');
+  const mongoose = require('mongoose');
+  const session = require('express-session');
 
-    const cors = require('cors');
-    const bodyParser = require('body-parser');
-    const mongoose = require('mongoose');
-    const session = require('express-session');
+  const isProduction = process.env.NODE_ENV === 'production';
 
-    const isProduction = process.env.NODE_ENV === 'production';
+  mongoose.promise = global.Promise;
 
-    mongoose.promise = global.Promise;
+  // models
+  require('../models/user.model');
+  require('../util/passport');
 
-    // models
-    require('../models/user.model');
-    require('../util/passport');
+  const init = (app) => {
+    app.use(cors());
+    app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({extended: false}));
+    app.use(session({
+      secret: 'core-delivery',
+      cookie: {maxAge: 60000},
+      resave: false,
+      saveUninitialized: false,
+    }));
 
-    const init = app => {
+    if (!isProduction) {
+      app.use(require('morgan')('dev'));
+      mongoose.set('debug', true);
+    }
 
-        app.use(cors());
-        app.use(bodyParser.json());
-        app.use(bodyParser.urlencoded({ extended: false }));
-        app.use(session({
-            secret: 'core-delivery',
-            cookie: { maxAge: 60000 },
-            resave: false,
-            saveUninitialized: false
-        }));
+    app.use((err, req, res, next) => {
+      res.status(err.status || 500);
 
-        if (!isProduction) {
-            app.use(require('morgan')('dev'));
-            mongoose.set('debug', true);
-        }
+      res.json({
+        errors: {
+          message: err.message,
+          error: {},
+        },
+      });
+    });
+  };
 
-        app.use((err, req, res, next) => {
-            
-            res.status(err.status || 500);
-
-            res.json({
-                errors: {
-                    message: err.message,
-                    error: {},
-                },
-            });
-
-        });
-
-    };
-
-    module.exports = {
-        init
-    };
-
+  module.exports = {
+    init,
+  };
 })();

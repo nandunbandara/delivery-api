@@ -1,15 +1,18 @@
 (() => {
+  'use strict';
 
-    'use strict';
+  // eslint-disable-next-line new-cap
+  const router = require('express').Router();
+  const UserController = require('../../controllers/user.controller');
+  const auth = require('../auth');
 
-    const router = require('express').Router();
-    const UserController = require('../../controllers/user.controller');
-    const auth = require('../auth');
+  router.post('/', auth.optional, UserController.signUpWithEmailAndPassword);
+  router.post(
+      '/signIn',
+      auth.optional,
+      UserController.signInWithEmailAndPassword,
+  );
+  router.get('/loggedIn', auth.required, UserController.getLoggedInUser);
 
-    router.post('/', auth.optional, UserController.signUpWithEmailAndPassword);
-    router.post('/signIn', auth.optional, UserController.signInWithEmailAndPassword);
-    router.get('/loggedIn', auth.required, UserController.getLoggedInUser);
-
-    module.exports = router;
-
+  module.exports = router;
 })();

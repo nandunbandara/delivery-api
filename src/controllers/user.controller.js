@@ -1,119 +1,113 @@
 (() => {
+  'use strict';
 
-    'use strict';
+  const HTTP_STATUS = require('http-status');
+  const User = require('../models/user.model');
+  const passport = require('passport');
 
-    const HTTP_STATUS = require('http-status');
-    const User = require('../models/user.model');
-    const passport = require('passport');
+  /**
+   * Handle signup with email and password
+   * @param {*} req
+   * @param {*} res
+   * @param {*} next
+   * @return HTTP Response
+   */
+  const signUpWithEmailAndPassword = (req, res, next) => {
+    if (!req.body.email) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        errors: {
+          email: 'is required',
+        },
+      });
+    }
 
-    /**
-     * 
-     * @param {*} req 
-     * @param {*} res 
-     * @param {*} next 
-     */
-    const signUpWithEmailAndPassword = (req, res, next) => {
+    if (!req.body.password) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        errors: {
+          password: 'is required',
+        },
+      });
+    }
 
-        if (!req.body.email) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({
-                success: false,
-                errors: {
-                    email: 'is required'
-                }
+    const user = new User(req.body);
+    user.setPassword(req.body.password);
+
+    return user.save()
+        .then((result) => res.status(HTTP_STATUS.CREATED)
+            .json({
+              success: true,
+              data: result.toAuthJSON(),
+            }),
+        ).catch((err) => next(err));
+  };
+
+  const signInWithEmailAndPassword = (req, res, next) => {
+    if (!req.body.email) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        errors: {
+          email: 'is required',
+        },
+      });
+    }
+
+    if (!req.body.password) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        success: false,
+        errors: {
+          password: 'is required',
+        },
+      });
+    }
+
+    return passport.authenticate(
+        'local',
+        {session: true},
+        (err, user, info) => {
+          if (err) {
+            return next(err);
+          }
+
+          if (user) {
+            user.token = user.generateJWT();
+            return res.status(HTTP_STATUS.OK).json({
+              success: true,
+              data: user.toAuthJSON(),
             });
-        }
+          }
 
-        if (!req.body.password) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({
-                success: false,
-                errors: {
-                    password: 'is required'
-                }
-            });
-        }
-
-        const user = new User(req.body);
-        user.setPassword(req.body.password);
-
-        return user.save()
-            .then(result => res.status(HTTP_STATUS.CREATED)
-                .json({
-                    success: true,
-                    data: result.toAuthJSON()
-                })
-        ).catch(err => next(err));
-
-    };
-
-    const signInWithEmailAndPassword = (req, res, next) => {
-        
-        if (!req.body.email) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({
-                success: false,
-                errors: {
-                    email: 'is required'
-                }
-            });
-        }
-
-        if (!req.body.password) {
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({
-                success: false,
-                errors: {
-                    password: 'is required'
-                }
-            });
-        }
-
-        return passport.authenticate('local', { session: true }, (err, user, info) => {
-            if (err) {
-                return next(err);
-            }
-
-            if (user) {
-                user.token = user.generateJWT();
-                return res.status(HTTP_STATUS.OK).json({
-                    success: true,
-                    data: user.toAuthJSON()
-                });
-            }
-
-            return status(HTTP_STATUS.BAD_REQUEST).info;
-
+          return status(HTTP_STATUS.BAD_REQUEST).info;
         })(req, res, next);
+  };
 
-    };
+  /**
+   * GET logged in user
+   * @param {*} req
+   * @param {*} res
+   * @param {*} next
+   * @return HTTP Response
+   */
+  const getLoggedInUser = (req, res, next) => {
+    const {payload: {id}} = req;
 
-    /**
-     * 
-     * @param {*} req 
-     * @param {*} res 
-     * @param {*} next 
-     */
-    const getLoggedInUser = (req, res, next) => {
+    return User.findById(id)
+        .then((user) => {
+          if (!user) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).send();
+          }
 
-        const { payload: { id } } = req;
+          return res.status(HTTP_STATUS.OK).json({
+            success: true,
+            data: user.toAuthJSON(),
+          });
+        }).catch((err) => next(err));
+  };
 
-        return User.findById(id)
-            .then(user => {
-                
-                if (!user) {
-                    return res.status(HTTP_STATUS.BAD_REQUEST).send();
-                }
-
-                return res.status(HTTP_STATUS.OK).json({
-                    success: true,
-                    data: user.toAuthJSON()
-                });
-
-            }).catch(err => next(err));
-
-    };
-
-    module.exports = {
-        signUpWithEmailAndPassword,
-        signInWithEmailAndPassword,
-        getLoggedInUser
-    };
-
+  module.exports = {
+    signUpWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    getLoggedInUser,
+  };
 })();
