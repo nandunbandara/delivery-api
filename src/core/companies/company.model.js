@@ -5,4 +5,4 @@ const companySchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
 }, { timestamps: true });
 
-module.exports = mongoose.model('')
+module.exports = mongoose.model('company', companySchema);
